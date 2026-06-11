@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini Translator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>Gemini Translator</h1>
+        <p>Dịch nhanh văn bản với Google AI Studio (Gemini API)</p>
+      </header>
+
+      <section class="card settings">
+        <label for="apiKey">Google AI API key</label>
+        <div class="row">
+          <input id="apiKey" type="password" placeholder="Dán API key tại đây" autocomplete="off" />
+          <button id="saveKeyBtn" type="button">Lưu key</button>
+        </div>
+        <small>
+          Lấy API key tại
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+        </small>
+      </section>
+
+      <section class="card">
+        <label for="sourceText">Nội dung cần dịch</label>
+        <textarea id="sourceText" rows="6" placeholder="Nhập hoặc paste văn bản..."></textarea>
+
+        <div class="row wrap">
+          <div>
+            <label for="targetLanguage">Ngôn ngữ đích</label>
+            <select id="targetLanguage">
+              <option value="English">Tiếng Anh</option>
+              <option value="Français">Tiếng Pháp</option>
+              <option value="Deutsch">Tiếng Đức</option>
+              <option value="日本語">Tiếng Nhật</option>
+              <option value="한국어">Tiếng Hàn</option>
+              <option value="中文">Tiếng Trung</option>
+              <option value="Español">Tiếng Tây Ban Nha</option>
+              <option value="Italiano">Tiếng Ý</option>
+              <option value="Português">Tiếng Bồ Đào Nha</option>
+              <option value="Tiếng Việt">Tiếng Việt</option>
+            </select>
+          </div>
+          <button id="translateBtn" type="button">Dịch</button>
+        </div>
+
+        <p id="status" class="status" aria-live="polite"></p>
+        <p id="sourceLanguage" class="source-language"></p>
+
+        <label for="translatedText">Kết quả dịch</label>
+        <textarea id="translatedText" rows="6" readonly placeholder="Kết quả sẽ hiển thị ở đây..."></textarea>
+        <button id="copyBtn" type="button">Sao chép kết quả</button>
+      </section>
+
+      <section class="card" id="historySection">
+        <h2>Lịch sử gần đây</h2>
+        <ul id="historyList"></ul>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
