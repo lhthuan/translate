@@ -2,7 +2,7 @@ const API_KEY_STORAGE_KEY = "gemini_translate_api_key_encrypted";
 const HISTORY_STORAGE_KEY = "gemini_translate_history";
 const HISTORY_LIMIT = 8;
 const GEMINI_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 const apiKeyInput = document.getElementById("apiKey");
 const apiPinInput = document.getElementById("apiPin");
@@ -126,7 +126,9 @@ async function translate() {
     });
 
     if (!response.ok) {
-      throw new Error(`Lỗi mạng/API: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error?.message || `Lỗi mạng/API: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
