@@ -1,11 +1,13 @@
-const API_KEY_STORAGE_KEY = "gemini_translate_api_key";
+const API_KEY_STORAGE_KEY = "gemini_translate_api_key_encrypted";
 const HISTORY_STORAGE_KEY = "gemini_translate_history";
 const HISTORY_LIMIT = 8;
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 const apiKeyInput = document.getElementById("apiKey");
+const apiPinInput = document.getElementById("apiPin");
 const saveKeyBtn = document.getElementById("saveKeyBtn");
+const loadKeyBtn = document.getElementById("loadKeyBtn");
 const sourceTextInput = document.getElementById("sourceText");
 const targetLanguageSelect = document.getElementById("targetLanguage");
 const translateBtn = document.getElementById("translateBtn");
@@ -18,32 +20,76 @@ const historyList = document.getElementById("historyList");
 init();
 
 function init() {
-  apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_KEY) || "";
+  if (localStorage.getItem(API_KEY_STORAGE_KEY)) {
+    setStatus("Đã có key mã hóa trong bộ nhớ cục bộ. Nhập PIN để mở khóa.");
+  }
+
   renderHistory();
 
   saveKeyBtn.addEventListener("click", saveApiKey);
+  loadKeyBtn.addEventListener("click", loadApiKey);
   translateBtn.addEventListener("click", translate);
   copyBtn.addEventListener("click", copyResult);
 }
 
-function saveApiKey() {
+async function saveApiKey() {
   const key = apiKeyInput.value.trim();
+  const pin = apiPinInput.value.trim();
+
   if (!key) {
     setStatus("Vui lòng nhập API key trước khi lưu.", true);
     return;
   }
 
-  localStorage.setItem(API_KEY_STORAGE_KEY, key);
-  setStatus("Đã lưu API key.");
+  if (!pin) {
+    setStatus("Nhập PIN để lưu key an toàn vào localStorage.", true);
+    return;
+  }
+
+  if (!window.crypto?.subtle) {
+    setStatus("Trình duyệt không hỗ trợ mã hóa Web Crypto.", true);
+    return;
+  }
+
+  try {
+    const encryptedPayload = await encryptText(key, pin);
+    localStorage.setItem(API_KEY_STORAGE_KEY, JSON.stringify(encryptedPayload));
+    setStatus("Đã mã hóa và lưu API key thành công.");
+  } catch {
+    setStatus("Không thể mã hóa API key.", true);
+  }
+}
+
+async function loadApiKey() {
+  const pin = apiPinInput.value.trim();
+  const saved = localStorage.getItem(API_KEY_STORAGE_KEY);
+
+  if (!saved) {
+    setStatus("Chưa có API key mã hóa trong localStorage.", true);
+    return;
+  }
+
+  if (!pin) {
+    setStatus("Vui lòng nhập PIN để mở khóa key đã lưu.", true);
+    return;
+  }
+
+  try {
+    const payload = JSON.parse(saved);
+    apiKeyInput.value = await decryptText(payload, pin);
+    setStatus("Đã mở khóa API key.");
+  } catch {
+    setStatus("Không thể mở khóa key. Kiểm tra lại PIN.", true);
+  }
 }
 
 async function translate() {
-  const apiKey = apiKeyInput.value.trim() || localStorage.getItem(API_KEY_STORAGE_KEY);
+  const apiKey = apiKeyInput.value.trim();
   const sourceText = sourceTextInput.value.trim();
   const targetLanguage = targetLanguageSelect.value;
 
   if (!apiKey) {
-    setStatus("Chưa có API key. Vui lòng nhập và lưu API key.", true);
+    setStatus("Chưa có API key. Vui lòng nhập key hoặc mở khóa key đã lưu.", true);
     return;
   }
 
@@ -215,4 +261,61 @@ function renderHistory() {
     li.appendChild(button);
     historyList.appendChild(li);
   });
+}
+
+async function encryptText(text, pin) {
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pin, salt);
+
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encoder.encode(text)
+  );
+
+  return {
+    salt: bytesToBase64(salt),
+    iv: bytesToBase64(iv),
+    ciphertext: bytesToBase64(new Uint8Array(encryptedBuffer))
+  };
+}
+
+async function decryptText(payload, pin) {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const salt = base64ToBytes(payload.salt);
+  const iv = base64ToBytes(payload.iv);
+  const ciphertext = base64ToBytes(payload.ciphertext);
+  const key = await deriveKey(pin, salt);
+
+  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return decoder.decode(decrypted || encoder.encode(""));
+}
+
+async function deriveKey(pin, salt) {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(pin), "PBKDF2", false, ["deriveKey"]);
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+function bytesToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function base64ToBytes(base64Text) {
+  return Uint8Array.from(atob(base64Text), (char) => char.charCodeAt(0));
 }

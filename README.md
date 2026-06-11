@@ -11,7 +11,7 @@
 - Sao chép kết quả dịch
 - Thông báo loading + xử lý lỗi (thiếu API key, lỗi mạng/API)
 - Responsive cho mobile/desktop
-- Lưu API key và lịch sử dịch gần đây bằng Local Storage
+- Lưu API key (đã mã hóa bằng PIN) và lịch sử dịch gần đây bằng Local Storage
 
 ## Cách lấy Google AI API key
 
@@ -23,12 +23,14 @@
 ## Cách chạy ứng dụng
 
 1. Mở file `/home/runner/work/translate/translate/lhthuan/translate/index.html` bằng trình duyệt.
-2. Dán API key vào ô **Google AI API key** và nhấn **Lưu key**.
-3. Nhập văn bản cần dịch, chọn ngôn ngữ đích.
-4. Nhấn **Dịch** để nhận kết quả.
-5. Nhấn **Sao chép kết quả** để copy nhanh.
+2. Dán API key vào ô **Google AI API key**.
+3. (Khuyên dùng) Nhập PIN vào ô **PIN mã hóa key**, nhấn **Lưu key** để lưu API key an toàn.
+4. Khi mở lại ứng dụng, nhập PIN rồi nhấn **Mở khóa key đã lưu**.
+5. Nhập văn bản cần dịch, chọn ngôn ngữ đích.
+6. Nhấn **Dịch** để nhận kết quả.
+7. Nhấn **Sao chép kết quả** để copy nhanh.
 
 ## Lưu ý
 
-- API key được lưu cục bộ trên trình duyệt của bạn (Local Storage).
-- Không chia sẻ API key với người khác.
+- API key được mã hóa trước khi lưu trong Local Storage.
+- Không chia sẻ API key và PIN với người khác.
